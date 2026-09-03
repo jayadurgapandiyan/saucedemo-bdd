@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node", "@wdio/globals/types"],
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["./wdio.conf.ts", "./pageobjects/**/*.ts", "./step-definitions/**/*.ts", "./test/**/*.ts"]
+}
