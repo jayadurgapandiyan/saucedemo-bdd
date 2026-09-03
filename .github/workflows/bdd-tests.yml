@@ -164,7 +164,7 @@ jobs:
 
           # Email information
           from: durgapandiyan4@gmail.com
-          to: karthicksubramani970@gmail.com
+          to: karthicksubramani970@gmail.com,deeps.thinktime@gmail.com
 
           subject: "SauceDemo BDD Test Report - ${{ needs.run-bdd-tests.result }}"
 
