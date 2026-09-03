@@ -100,7 +100,7 @@ jobs:
 
           subject: "SauceDemo BDD Test Report - ${{ needs.run-bdd-tests.result }}"
 
-          to: ${{ secrets.karthicksubramani970@gmail.com }}
+          to: karthicksubramani970@gmail.com
 
           from: "BDD Automation <DURGA>"
 
