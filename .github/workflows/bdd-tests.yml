@@ -28,7 +28,7 @@ jobs:
     steps:
 
       # --------------------------------------------------------
-      # CHECKOUT CODE
+      # CHECKOUT REPOSITORY
       # --------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
 
 
       # --------------------------------------------------------
-      # RUN WEBDRIVERIO + CUCUMBER TESTS
+      # EXECUTE WEBDRIVERIO + CUCUMBER BDD TESTS
       # --------------------------------------------------------
       - name: Execute WebdriverIO BDD Tests
         run: npm test
@@ -69,7 +69,7 @@ jobs:
 
 
       # --------------------------------------------------------
-      # UPLOAD ALLURE RESULTS AS ARTIFACT
+      # UPLOAD ALLURE RESULTS
       # --------------------------------------------------------
       - name: Upload Allure Results
         if: always()
@@ -99,7 +99,7 @@ jobs:
 
 
   # ==========================================================
-  # DEPLOY ALLURE REPORT + SEND EMAIL
+  # DEPLOY ALLURE REPORT
   # ==========================================================
   deploy:
 
@@ -117,7 +117,7 @@ jobs:
     steps:
 
       # --------------------------------------------------------
-      # DEPLOY ALLURE REPORT
+      # DEPLOY TO GITHUB PAGES
       # --------------------------------------------------------
       - name: Deploy Allure Report to GitHub Pages
         id: deployment
@@ -132,45 +132,45 @@ jobs:
         run: |
           if [ -z "${{ secrets.EMAIL_USERNAME }}" ]; then
             echo "EMAIL_USERNAME is missing"
+            exit 1
           else
             echo "EMAIL_USERNAME is configured"
           fi
 
           if [ -z "${{ secrets.EMAIL_PASSWORD }}" ]; then
             echo "EMAIL_PASSWORD is missing"
+            exit 1
           else
             echo "EMAIL_PASSWORD is configured"
           fi
 
 
       # --------------------------------------------------------
-      # SEND EMAIL
+      # SEND ALLURE REPORT EMAIL
       # --------------------------------------------------------
       - name: Send Allure Report Email
         if: always()
         uses: dawidd6/action-send-mail@v6
         with:
 
-          # Gmail SMTP configuration
+          # Gmail SMTP
           server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
+          server_port: 587
+          secure: false
 
-          # Gmail credentials from GitHub Secrets
+          # Gmail credentials
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
 
-          # Email details
-          subject: "SauceDemo BDD Test Report - ${{ needs.run-bdd-tests.result }}"
-
+          # Email information
+          from: durgapandiyan4@gmail.com
           to: karthicksubramani970@gmail.com
 
-          from: "durgapandiyan4@gmail.com"
+          subject: "SauceDemo BDD Test Report - ${{ needs.run-bdd-tests.result }}"
 
-          # Email body
+          # Email content
           html_body: |
             <html>
-
               <body>
 
                 <h2>SauceDemo BDD Test Execution</h2>
@@ -221,5 +221,4 @@ jobs:
                 </p>
 
               </body>
-
             </html>
