@@ -153,7 +153,7 @@ jobs:
 
           # Email information
           from: durgapandiyan4@gmail.com
-          to: karthicksubramani970@gmail.com,durgapandiyan4@gmail.com
+          to: karthicksubramani970@gmail.com,durgapandiyan4@gmail.com,arun@thinktime.in
 
           # Subject with execution status, run number and timestamp
           subject: "[${{ needs.run-bdd-tests.result }}] SauceDemo BDD Automation | Run #${{ github.run_number }} | ${{ steps.timestamp.outputs.datetime }}"
