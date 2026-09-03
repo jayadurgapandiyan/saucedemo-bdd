@@ -1,66 +1,96 @@
 name: SauceDemo BDD Tests
 
 on:
+
+  # ==========================================================
+  # AUTOMATIC EXECUTION
+  # ==========================================================
   push:
     branches:
       - main
 
+  # ==========================================================
+  # MANUAL EXECUTION
+  # CLIENT CAN ENTER EMAIL ID
+  # ==========================================================
   workflow_dispatch:
+    inputs:
 
+      client_email:
+        description: 'Enter email address to receive the test execution report'
+        required: true
+        type: string
+
+      send_to_qa:
+        description: 'Also send report to QA email'
+        required: false
+        default: true
+        type: boolean
+
+
+# ==========================================================
+# PERMISSIONS
+# ==========================================================
 permissions:
   contents: read
   pages: write
   id-token: write
 
+
+# ==========================================================
+# CONCURRENCY
+# ==========================================================
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
+
+# ==========================================================
+# JOB 1 - RUN BDD TESTS
+# ==========================================================
 jobs:
 
-  # ==========================================================
-  # RUN BDD TESTS
-  # ==========================================================
   run-bdd-tests:
 
     runs-on: ubuntu-latest
 
     steps:
 
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       # CHECKOUT REPOSITORY
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
 
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       # SETUP NODE.JS
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
 
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       # INSTALL DEPENDENCIES
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       - name: Install dependencies
         run: npm ci
 
 
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       # EXECUTE WEBDRIVERIO + CUCUMBER BDD TESTS
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       - name: Execute WebdriverIO BDD Tests
+        id: bdd_tests
         run: npm test
 
 
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       # GENERATE ALLURE REPORT
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       - name: Generate Allure Report
         if: always()
         run: |
@@ -68,9 +98,9 @@ jobs:
           allure generate allure-results -o allure-report --clean
 
 
-      # --------------------------------------------------------
-      # UPLOAD ALLURE RESULTS
-      # --------------------------------------------------------
+      # ------------------------------------------------------
+      # UPLOAD ALLURE RESULTS AS ARTIFACT
+      # ------------------------------------------------------
       - name: Upload Allure Results
         if: always()
         uses: actions/upload-artifact@v4
@@ -80,18 +110,18 @@ jobs:
           retention-days: 7
 
 
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       # SETUP GITHUB PAGES
-      # --------------------------------------------------------
-      - name: Setup Pages
+      # ------------------------------------------------------
+      - name: Setup GitHub Pages
         if: always()
         uses: actions/configure-pages@v5
 
 
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       # UPLOAD ALLURE REPORT TO GITHUB PAGES
-      # --------------------------------------------------------
-      - name: Upload Allure Report to GitHub Pages
+      # ------------------------------------------------------
+      - name: Upload Allure Report
         if: always()
         uses: actions/upload-pages-artifact@v3
         with:
@@ -99,7 +129,7 @@ jobs:
 
 
   # ==========================================================
-  # DEPLOY ALLURE REPORT
+  # JOB 2 - DEPLOY ALLURE REPORT
   # ==========================================================
   deploy:
 
@@ -116,17 +146,17 @@ jobs:
 
     steps:
 
-      # --------------------------------------------------------
-      # DEPLOY TO GITHUB PAGES
-      # --------------------------------------------------------
+      # ------------------------------------------------------
+      # DEPLOY ALLURE REPORT
+      # ------------------------------------------------------
       - name: Deploy Allure Report to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
 
-      # --------------------------------------------------------
-      # CAPTURE EXECUTION DATE AND TIME
-      # --------------------------------------------------------
+      # ------------------------------------------------------
+      # CAPTURE EXECUTION TIMESTAMP
+      # ------------------------------------------------------
       - name: Capture Execution Timestamp
         id: timestamp
         if: always()
@@ -134,43 +164,76 @@ jobs:
           echo "datetime=$(TZ=Asia/Kolkata date '+%d-%b-%Y %I:%M:%S %p IST')" >> "$GITHUB_OUTPUT"
 
 
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       # SEND TEST EXECUTION EMAIL
-      # --------------------------------------------------------
+      # ------------------------------------------------------
       - name: Send Test Execution Email
-        if: always()
+        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
         uses: dawidd6/action-send-mail@v18
         with:
 
-          # Gmail SMTP
+          # --------------------------------------------------
+          # GMAIL SMTP CONFIGURATION
+          # --------------------------------------------------
           server_address: smtp.gmail.com
           server_port: 465
           secure: true
 
-          # Gmail credentials
+          # --------------------------------------------------
+          # GMAIL CREDENTIALS
+          # STORED IN GITHUB SECRETS
+          # --------------------------------------------------
           username: ${{ secrets.DURGA }}
           password: ${{ secrets.DURGAPASSWORD }}
 
-          # Email information
+          # --------------------------------------------------
+          # EMAIL SENDER
+          # --------------------------------------------------
           from: durgapandiyan4@gmail.com
-          to: karthicksubramani970@gmail.com,durgapandiyan4@gmail.com,arun@thinktime.in
 
-          # Subject with execution status, run number and timestamp
+          # --------------------------------------------------
+          # CLIENT EMAIL ENTERED DURING WORKFLOW EXECUTION
+          # --------------------------------------------------
+          to: ${{ inputs.client_email }}
+
+          # --------------------------------------------------
+          # EMAIL SUBJECT
+          # --------------------------------------------------
           subject: "[${{ needs.run-bdd-tests.result }}] SauceDemo BDD Automation | Run #${{ github.run_number }} | ${{ steps.timestamp.outputs.datetime }}"
 
-          # ----------------------------------------------------
-          # PROFESSIONAL CI/CD EMAIL CONTENT
-          # ----------------------------------------------------
+          # --------------------------------------------------
+          # EMAIL CONTENT
+          # --------------------------------------------------
           html_body: |
+
             <!DOCTYPE html>
+
             <html>
 
-            <body style="font-family: Arial, Helvetica, sans-serif;
-                         font-size: 14px;
-                         color: #333333;
-                         line-height: 1.5;">
+            <body style="
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 14px;
+              color: #333333;
+              line-height: 1.5;
+            ">
 
-    
+              <h2>
+                SauceDemo BDD Automation Execution Report
+              </h2>
+
+              <p>
+                Dear Client,
+              </p>
+
+              <p>
+                The SauceDemo WebdriverIO + Cucumber BDD automation
+                execution has been completed.
+              </p>
+
+
+              <!-- ==========================================
+                   EXECUTION SUMMARY
+                   ========================================== -->
 
               <h3>Execution Summary</h3>
 
@@ -178,9 +241,11 @@ jobs:
                 cellpadding="8"
                 cellspacing="0"
                 border="1"
-                style="border-collapse: collapse;
-                       width: 100%;
-                       max-width: 700px;">
+                style="
+                  border-collapse: collapse;
+                  width: 100%;
+                  max-width: 700px;
+                ">
 
                 <tr>
                   <td><b>Test Status</b></td>
@@ -212,24 +277,53 @@ jobs:
                   <td>${{ steps.timestamp.outputs.datetime }}</td>
                 </tr>
 
+                <tr>
+                  <td><b>Triggered By</b></td>
+                  <td>${{ github.actor }}</td>
+                </tr>
+
               </table>
 
 
-              <h3>Test Report</h3>
+              <!-- ==========================================
+                   ALLURE REPORT
+                   ========================================== -->
+
+              <h3>Allure Test Report</h3>
 
               <p>
-                The Allure report has been generated and published to
-                GitHub Pages. The detailed BDD execution results,
-                scenarios, steps and test outcomes can be reviewed
-                using the link below.
+                The detailed Allure report has been generated and
+                published to GitHub Pages.
               </p>
 
               <p>
-                <a href="${{ steps.deployment.outputs.page_url }}">
+                The report contains detailed BDD execution information,
+                including features, scenarios, steps, status,
+                execution duration and failure details.
+              </p>
+
+              <p>
+
+                <a
+                  href="${{ steps.deployment.outputs.page_url }}"
+                  style="
+                    display: inline-block;
+                    padding: 12px 20px;
+                    background-color: #2ea44f;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                  "
+                >
                   <b>View Allure Test Report</b>
                 </a>
+
               </p>
 
+
+              <!-- ==========================================
+                   GITHUB ACTIONS RUN
+                   ========================================== -->
 
               <h3>Pipeline Execution</h3>
 
@@ -239,37 +333,90 @@ jobs:
               </p>
 
               <p>
-                <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">
+
+                <a
+                  href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  style="
+                    display: inline-block;
+                    padding: 10px 18px;
+                    background-color: #0969da;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                  "
+                >
                   <b>View GitHub Actions Run</b>
                 </a>
+
               </p>
 
+
+              <!-- ==========================================
+                   PIPELINE ACTIVITIES
+                   ========================================== -->
 
               <h3>Pipeline Activities</h3>
 
               <ul>
-                <li>Checkout source code</li>
-                <li>Configure Node.js environment</li>
-                <li>Install project dependencies</li>
-                <li>Execute WebdriverIO and Cucumber BDD tests</li>
-                <li>Generate Allure test results</li>
-                <li>Publish Allure report to GitHub Pages</li>
-                <li>Send automated execution notification</li>
+
+                <li>
+                  Checkout source code
+                </li>
+
+                <li>
+                  Configure Node.js environment
+                </li>
+
+                <li>
+                  Install project dependencies
+                </li>
+
+                <li>
+                  Execute WebdriverIO and Cucumber BDD tests
+                </li>
+
+                <li>
+                  Generate Allure test results
+                </li>
+
+                <li>
+                  Publish Allure report to GitHub Pages
+                </li>
+
+                <li>
+                  Send automated execution notification
+                </li>
+
               </ul>
 
+
+              <!-- ==========================================
+                   EXECUTION NOTES
+                   ========================================== -->
 
               <h3>Execution Notes</h3>
 
               <p>
-                This notification was automatically generated by the
-                CI/CD pipeline after completion of the test execution.
-                The linked Allure report contains the detailed test
-                execution results for further analysis.
+                This email notification was automatically generated
+                by the CI/CD pipeline after completion of the test
+                execution.
               </p>
+
+              <p>
+                Please click
+                <b>View Allure Test Report</b>
+                above to review the detailed test execution results.
+              </p>
+
 
               <hr>
 
-             
+              <p style="font-size: 12px; color: #777777;">
+
+                This is an automated notification generated by
+                GitHub Actions.
+
+              </p>
 
             </body>
 
