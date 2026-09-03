@@ -130,18 +130,18 @@ jobs:
       - name: Verify Email Secrets
         if: always()
         run: |
-          if [ -z "${{ secrets.EMAIL_USERNAME }}" ]; then
-            echo "EMAIL_USERNAME is missing"
+          if [ -z "${{ secrets.DURGA }}" ]; then
+            echo "DURGA is missing"
             exit 1
           else
-            echo "EMAIL_USERNAME is configured"
+            echo "DURGA is configured"
           fi
 
-          if [ -z "${{ secrets.EMAIL_PASSWORD }}" ]; then
-            echo "EMAIL_PASSWORD is missing"
+          if [ -z "${{ secrets.DURGAPASSWORD }}" ]; then
+            echo "DURGAPASSWORD is missing"
             exit 1
           else
-            echo "EMAIL_PASSWORD is configured"
+            echo "DURGAPASSWORD is configured"
           fi
 
 
@@ -150,17 +150,17 @@ jobs:
       # --------------------------------------------------------
       - name: Send Allure Report Email
         if: always()
-        uses: dawidd6/action-send-mail@v6
+        uses: dawidd6/action-send-mail@v18
         with:
 
           # Gmail SMTP
           server_address: smtp.gmail.com
-          server_port: 587
-          secure: false
+          server_port: 465
+          secure: true
 
           # Gmail credentials
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
+          username: ${{ secrets.DURGA }}
+          password: ${{ secrets.DURGAPASSWORD }}
 
           # Email information
           from: durgapandiyan4@gmail.com
