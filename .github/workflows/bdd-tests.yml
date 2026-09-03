@@ -1,4 +1,4 @@
-```yaml
+
 name: SauceDemo BDD Tests
 
 on:
@@ -147,4 +147,3 @@ jobs:
 
               </body>
             </html>
-```
