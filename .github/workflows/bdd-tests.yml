@@ -4,7 +4,7 @@ on:
 
   # ==========================================================
   # AUTOMATIC EXECUTION - SCHEDULE ONLY
-  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES
+  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES 
   # After successful testing, restore the final schedule.
   # ==========================================================
   schedule:
