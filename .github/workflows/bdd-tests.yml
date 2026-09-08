@@ -3,11 +3,20 @@ name: SauceDemo BDD Tests
 on:
 
   # ==========================================================
-  # AUTOMATIC EXECUTION
+  # AUTOMATIC EXECUTION - PUSH
   # ==========================================================
   push:
     branches:
       - main
+
+  # ==========================================================
+  # AUTOMATIC EXECUTION - SCHEDULE
+  # 12:30 PM IST = 07:00 UTC
+  # 01:30 PM IST = 08:00 UTC
+  # ==========================================================
+  schedule:
+    - cron: '0 7 * * *'
+    - cron: '0 8 * * *'
 
   # ==========================================================
   # MANUAL EXECUTION
@@ -168,7 +177,7 @@ jobs:
       # SEND TEST EXECUTION EMAIL
       # ------------------------------------------------------
       - name: Send Test Execution Email
-        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
+        if: always()
         uses: dawidd6/action-send-mail@v18
         with:
 
@@ -192,9 +201,9 @@ jobs:
           from: durgapandiyan4@gmail.com
 
           # --------------------------------------------------
-          # CLIENT EMAIL ENTERED DURING WORKFLOW EXECUTION
+          # ASSIGNMENT EMAIL RECIPIENT
           # --------------------------------------------------
-          to: ${{ inputs.client_email }}
+          to: arunbabugreen@gmail.com
 
           # --------------------------------------------------
           # EMAIL SUBJECT
