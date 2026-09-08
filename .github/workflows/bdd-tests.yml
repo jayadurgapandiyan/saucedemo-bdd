@@ -3,14 +3,7 @@ name: SauceDemo BDD Tests
 on:
 
   # ==========================================================
-  # AUTOMATIC EXECUTION - PUSH
-  # ==========================================================
-  push:
-    branches:
-      - main
-
-  # ==========================================================
-  # AUTOMATIC EXECUTION - SCHEDULE
+  # AUTOMATIC EXECUTION - SCHEDULE ONLY
   # 12:30 PM IST = 07:00 UTC
   # 01:30 PM IST = 08:00 UTC
   # ==========================================================
@@ -20,7 +13,6 @@ on:
 
   # ==========================================================
   # MANUAL EXECUTION
-  # CLIENT CAN ENTER EMAIL ID
   # ==========================================================
   workflow_dispatch:
     inputs:
