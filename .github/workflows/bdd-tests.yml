@@ -4,12 +4,12 @@ on:
 
   # ==========================================================
   # AUTOMATIC EXECUTION - SCHEDULE ONLY
-  # 12:30 PM IST = 07:00 UTC
-  # 01:30 PM IST = 08:00 UTC
+  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES
+  # After successful testing, restore the final schedule.
   # ==========================================================
   schedule:
-    - cron: '15 7 * * *'
-    - cron: '0 8 * * *'
+    - cron: '*/5 * * * *'   # TEMPORARY TEST: every 5 minutes
+
 
 
 # ==========================================================
@@ -178,7 +178,7 @@ jobs:
           # --------------------------------------------------
           # ASSIGNMENT EMAIL RECIPIENT
           # --------------------------------------------------
-          to: arunbabugreen@gmail.com
+          to: durgapandiyan4@gmail.com
 
           # --------------------------------------------------
           # EMAIL SUBJECT
