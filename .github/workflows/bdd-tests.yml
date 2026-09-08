@@ -1,14 +1,21 @@
 name: SauceDemo BDD Tests
 
+name: SauceDemo BDD Tests
+
 on:
 
   # ==========================================================
-  # AUTOMATIC EXECUTION - SCHEDULE ONLY
-  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES 
-  # After successful testing, restore the final schedule.
+  # MANUAL EXECUTION
+  # Allows you to click "Run workflow" in GitHub Actions
+  # ==========================================================
+  workflow_dispatch:
+
+  # ==========================================================
+  # AUTOMATIC EXECUTION - SCHEDULE
+  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES
   # ==========================================================
   schedule:
-    - cron: '*/5 * * * *'   # TEMPORARY TEST: every 5 minutes
+    - cron: '*/5 * * * *'
 
 
 
