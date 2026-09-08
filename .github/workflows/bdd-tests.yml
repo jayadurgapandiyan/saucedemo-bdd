@@ -11,7 +11,7 @@ on:
 
   # ==========================================================
   # AUTOMATIC EXECUTION - SCHEDULE
-  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES
+  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES 
   # ==========================================================
   schedule:
     - cron: '*/5 * * * *'
