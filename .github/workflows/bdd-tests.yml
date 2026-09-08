@@ -11,23 +11,6 @@ on:
     - cron: '0 7 * * *'
     - cron: '0 8 * * *'
 
-  # ==========================================================
-  # MANUAL EXECUTION
-  # ==========================================================
-  workflow_dispatch:
-    inputs:
-
-      client_email:
-        description: 'Enter email address to receive the test execution report'
-        required: true
-        type: string
-
-      send_to_qa:
-        description: 'Also send report to QA email'
-        required: false
-        default: true
-        type: boolean
-
 
 # ==========================================================
 # PERMISSIONS
