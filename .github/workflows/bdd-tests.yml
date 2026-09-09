@@ -203,8 +203,8 @@ jobs:
           # Scheduled execution:
           #   DEFAULT_CLIENT_EMAIL secret is used
           # --------------------------------------------------
-          to: ${{ inputs.client_email || secrets.DEFAULT_CLIENT_EMAIL }}
-
+         # Client email + your email
+    to: ${{ inputs.client_email }},durgapandiyan4@gmail.com
 
           # --------------------------------------------------
           # EMAIL SUBJECT
