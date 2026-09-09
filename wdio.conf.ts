@@ -6,7 +6,10 @@ export const config: WebdriverIO.Config = {
     {
       browserName: 'chrome',
       'goog:chromeOptions': {
-        args: ['--window-size=1440,1000']
+        args: [
+          '--window-size=1440,1000',
+          ...(process.env.CI ? ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'] : [])
+        ]
       },
       acceptInsecureCerts: true
     }

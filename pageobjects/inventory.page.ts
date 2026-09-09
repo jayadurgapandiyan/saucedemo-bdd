@@ -13,7 +13,7 @@ class InventoryPage {
 
   async addProductToCart(productId: string): Promise<void> {
     const addButton = $(`#add-to-cart-${productId}`);
-    await addButton.waitForClickable({ timeout: 10000 });
+    //await addButton.waitForClickable({ timeout: 10000 });
     await addButton.click();
   }
 
@@ -30,7 +30,7 @@ class InventoryPage {
   }
 
   async openCart(): Promise<void> {
-    await this.cartIcon.waitForClickable({ timeout: 10000 });
+    //await this.cartIcon.waitForClickable({ timeout: 10000 });
     await this.cartIcon.click();
   }
 }

@@ -13,7 +13,7 @@ class LoginPage {
   async login(username: string, password: string): Promise<void> {
     await this.usernameInput.setValue(username);
     await this.passwordInput.setValue(password);
-    await this.loginButton.waitForClickable({ timeout: 10000 });
+   // await this.loginButton.waitForClickable({ timeout: 10000 });
     await this.loginButton.click();
   }
 

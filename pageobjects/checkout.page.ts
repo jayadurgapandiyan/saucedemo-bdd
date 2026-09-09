@@ -24,7 +24,7 @@ class CheckoutPage {
   }
 
   async clickContinue(): Promise<void> {
-    await this.continueButton.waitForClickable({ timeout: 10000 });
+   // await this.continueButton.waitForClickable({ timeout: 10000 });
     await this.continueButton.click();
   }
 
@@ -41,7 +41,7 @@ class CheckoutPage {
   }
 
   async clickFinish(): Promise<void> {
-    await this.finishButton.waitForClickable({ timeout: 10000 });
+    //await this.finishButton.waitForClickable({ timeout: 10000 });
     await this.finishButton.click();
   }
 
