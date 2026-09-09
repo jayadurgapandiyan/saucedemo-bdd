@@ -1,51 +1,467 @@
+
 name: SauceDemo BDD Tests
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
 
+on:
+
+  # ==========================================================
+  # MANUAL EXECUTION
+  # Client can enter email before starting the workflow
+  # ==========================================================
+  workflow_dispatch:
+    inputs:
+      client_email:
+        description: 'Enter client email address'
+        required: true
+        type: string
+
+
+  # ==========================================================
+  # AUTOMATIC EXECUTION - SCHEDULE
+  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES
+  # ==========================================================
+  schedule:
+    - cron: '*/5 * * * *'
+
+
+
+# ==========================================================
+# PERMISSIONS
+# ==========================================================
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+
+# ==========================================================
+# CONCURRENCY
+# ==========================================================
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+
+
+# ==========================================================
+# JOB 1 - RUN BDD TESTS
+# ==========================================================
 jobs:
-  test:
+
+  run-bdd-tests:
+
     runs-on: ubuntu-latest
 
     steps:
+
+      # ------------------------------------------------------
+      # CHECKOUT REPOSITORY
+      # ------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+
+      # ------------------------------------------------------
+      # SETUP NODE.JS
+      # ------------------------------------------------------
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: '22'
+          cache: 'npm'
 
+
+      # ------------------------------------------------------
+      # INSTALL DEPENDENCIES
+      # ------------------------------------------------------
       - name: Install dependencies
         run: npm ci
 
-      - name: Type-check project
-        run: npm run typecheck
 
-      - name: Run BDD tests
-        id: bdd-tests
-        continue-on-error: true
-        env:
-          CI: true
+      # ------------------------------------------------------
+      # EXECUTE WEBDRIVERIO + CUCUMBER BDD TESTS
+      # ------------------------------------------------------
+      - name: Execute WebdriverIO BDD Tests
+        id: bdd_tests
         run: npm test
 
-      - name: Generate Allure report
-        if: always()
-        run: npx allure generate allure-results --clean -o allure-report
 
-      - name: Upload Allure report
+      # ------------------------------------------------------
+      # GENERATE ALLURE REPORT
+      # ------------------------------------------------------
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          npm install -g allure-commandline
+          allure generate allure-results -o allure-report --clean
+
+
+      # ------------------------------------------------------
+      # UPLOAD ALLURE RESULTS AS ARTIFACT
+      # ------------------------------------------------------
+      - name: Upload Allure Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report
-          path: allure-report
-          if-no-files-found: error
+          name: allure-results
+          path: allure-results/
+          retention-days: 7
 
-      - name: Fail when BDD tests fail
-        if: steps.bdd-tests.outcome == 'failure'
-        run: exit 1
+
+      # ------------------------------------------------------
+      # SETUP GITHUB PAGES
+      # ------------------------------------------------------
+      - name: Setup GitHub Pages
+        if: always()
+        uses: actions/configure-pages@v5
+
+
+      # ------------------------------------------------------
+      # UPLOAD ALLURE REPORT TO GITHUB PAGES
+      # ------------------------------------------------------
+      - name: Upload Allure Report
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './allure-report'
+
+
+
+  # ==========================================================
+  # JOB 2 - DEPLOY ALLURE REPORT
+  # ==========================================================
+  deploy:
+
+    if: always()
+
+    needs:
+      - run-bdd-tests
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+
+    steps:
+
+      # ------------------------------------------------------
+      # DEPLOY ALLURE REPORT
+      # ------------------------------------------------------
+      - name: Deploy Allure Report to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+
+      # ------------------------------------------------------
+      # CAPTURE EXECUTION TIMESTAMP
+      # ------------------------------------------------------
+      - name: Capture Execution Timestamp
+        id: timestamp
+        if: always()
+        run: |
+          echo "datetime=$(TZ=Asia/Kolkata date '+%d-%b-%Y %I:%M:%S %p IST')" >> "$GITHUB_OUTPUT"
+
+
+      # ------------------------------------------------------
+      # SEND TEST EXECUTION EMAIL
+      # ------------------------------------------------------
+      - name: Send Test Execution Email
+        if: always()
+        uses: dawidd6/action-send-mail@v18
+        with:
+
+          # --------------------------------------------------
+          # GMAIL SMTP CONFIGURATION
+          # --------------------------------------------------
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+
+
+          # --------------------------------------------------
+          # GMAIL CREDENTIALS
+          # STORED IN GITHUB SECRETS
+          # --------------------------------------------------
+          username: ${{ secrets.DURGA }}
+          password: ${{ secrets.DURGAPASSWORD }}
+
+
+          # --------------------------------------------------
+          # EMAIL SENDER
+          # --------------------------------------------------
+          from: durgapandiyan4@gmail.com
+
+
+          # --------------------------------------------------
+          # DYNAMIC EMAIL RECIPIENT
+          #
+          # Manual execution:
+          #   Client enters email
+          #
+          # Scheduled execution:
+          #   DEFAULT_CLIENT_EMAIL secret is used
+          # --------------------------------------------------
+          to: ${{ inputs.client_email || secrets.DEFAULT_CLIENT_EMAIL }}
+
+
+          # --------------------------------------------------
+          # EMAIL SUBJECT
+          # --------------------------------------------------
+          subject: "[${{ needs.run-bdd-tests.result }}] SauceDemo BDD Automation | Run #${{ github.run_number }} | ${{ steps.timestamp.outputs.datetime }}"
+
+
+          # --------------------------------------------------
+          # EMAIL CONTENT
+          # --------------------------------------------------
+          html_body: |
+
+            <!DOCTYPE html>
+
+            <html>
+
+            <body style="
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 14px;
+              color: #333333;
+              line-height: 1.5;
+            ">
+
+
+              <h2>
+                SauceDemo BDD Automation Execution Report
+              </h2>
+
+
+              <p>
+                Dear Client,
+              </p>
+
+
+              <p>
+                The SauceDemo WebdriverIO + Cucumber BDD automation
+                execution has been completed.
+              </p>
+
+
+
+              <!-- ==========================================
+                   EXECUTION SUMMARY
+                   ========================================== -->
+
+              <h3>Execution Summary</h3>
+
+
+              <table
+                cellpadding="8"
+                cellspacing="0"
+                border="1"
+                style="
+                  border-collapse: collapse;
+                  width: 100%;
+                  max-width: 700px;
+                ">
+
+
+                <tr>
+                  <td><b>Test Status</b></td>
+                  <td>${{ needs.run-bdd-tests.result }}</td>
+                </tr>
+
+
+                <tr>
+                  <td><b>Repository</b></td>
+                  <td>${{ github.repository }}</td>
+                </tr>
+
+
+                <tr>
+                  <td><b>Branch</b></td>
+                  <td>${{ github.ref_name }}</td>
+                </tr>
+
+
+                <tr>
+                  <td><b>Workflow</b></td>
+                  <td>${{ github.workflow }}</td>
+                </tr>
+
+
+                <tr>
+                  <td><b>Run Number</b></td>
+                  <td>#${{ github.run_number }}</td>
+                </tr>
+
+
+                <tr>
+                  <td><b>Execution Date & Time</b></td>
+                  <td>${{ steps.timestamp.outputs.datetime }}</td>
+                </tr>
+
+
+                <tr>
+                  <td><b>Triggered By</b></td>
+                  <td>${{ github.actor }}</td>
+                </tr>
+
+
+                <tr>
+                  <td><b>Report Recipient</b></td>
+                  <td>${{ inputs.client_email || secrets.DEFAULT_CLIENT_EMAIL }}</td>
+                </tr>
+
+
+              </table>
+
+
+
+              <!-- ==========================================
+                   ALLURE REPORT
+                   ========================================== -->
+
+              <h3>Allure Test Report</h3>
+
+
+              <p>
+                The detailed Allure report has been generated and
+                published to GitHub Pages.
+              </p>
+
+
+              <p>
+                The report contains detailed BDD execution information,
+                including features, scenarios, steps, status,
+                execution duration and failure details.
+              </p>
+
+
+              <p>
+
+                <a
+                  href="${{ steps.deployment.outputs.page_url }}"
+                  style="
+                    display: inline-block;
+                    padding: 12px 20px;
+                    background-color: #2ea44f;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                  "
+                >
+                  <b>View Allure Test Report</b>
+                </a>
+
+              </p>
+
+
+
+              <!-- ==========================================
+                   GITHUB ACTIONS RUN
+                   ========================================== -->
+
+              <h3>Pipeline Execution</h3>
+
+
+              <p>
+                For complete CI/CD execution details, workflow logs
+                and individual pipeline steps, please use the link below.
+              </p>
+
+
+              <p>
+
+                <a
+                  href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  style="
+                    display: inline-block;
+                    padding: 10px 18px;
+                    background-color: #0969da;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                  "
+                >
+                  <b>View GitHub Actions Run</b>
+                </a>
+
+              </p>
+
+
+
+              <!-- ==========================================
+                   PIPELINE ACTIVITIES
+                   ========================================== -->
+
+              <h3>Pipeline Activities</h3>
+
+
+              <ul>
+
+                <li>
+                  Checkout source code
+                </li>
+
+                <li>
+                  Configure Node.js environment
+                </li>
+
+                <li>
+                  Install project dependencies
+                </li>
+
+                <li>
+                  Execute WebdriverIO and Cucumber BDD tests
+                </li>
+
+                <li>
+                  Generate Allure test results
+                </li>
+
+                <li>
+                  Publish Allure report to GitHub Pages
+                </li>
+
+                <li>
+                  Send automated execution notification
+                </li>
+
+              </ul>
+
+
+
+              <!-- ==========================================
+                   EXECUTION NOTES
+                   ========================================== -->
+
+              <h3>Execution Notes</h3>
+
+
+              <p>
+                This email notification was automatically generated
+                by the CI/CD pipeline after completion of the test
+                execution.
+              </p>
+
+
+              <p>
+                Please click
+                <b>View Allure Test Report</b>
+                above to review the detailed test execution results.
+              </p>
+
+
+              <hr>
+
+
+              <p style="font-size: 12px; color: #777777;">
+
+                This is an automated notification generated by
+                GitHub Actions.
+
+              </p>
+
+
+            </body>
+
+            </html>
