@@ -1,3 +1,4 @@
+
 name: SauceDemo BDD Tests
 
 
@@ -5,13 +6,19 @@ on:
 
   # ==========================================================
   # MANUAL EXECUTION
-  # Allows you to click "Run workflow" in GitHub Actions
+  # Client can enter email before starting the workflow
   # ==========================================================
   workflow_dispatch:
+    inputs:
+      client_email:
+        description: 'Enter client email address'
+        required: true
+        type: string
+
 
   # ==========================================================
   # AUTOMATIC EXECUTION - SCHEDULE
-  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES 
+  # TEMPORARY TEST SCHEDULE - EVERY 5 MINUTES
   # ==========================================================
   schedule:
     - cron: '*/5 * * * *'
@@ -33,6 +40,7 @@ permissions:
 concurrency:
   group: "pages"
   cancel-in-progress: false
+
 
 
 # ==========================================================
@@ -118,6 +126,7 @@ jobs:
           path: './allure-report'
 
 
+
   # ==========================================================
   # JOB 2 - DEPLOY ALLURE REPORT
   # ==========================================================
@@ -133,6 +142,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
 
     steps:
 
@@ -169,6 +179,7 @@ jobs:
           server_port: 465
           secure: true
 
+
           # --------------------------------------------------
           # GMAIL CREDENTIALS
           # STORED IN GITHUB SECRETS
@@ -176,20 +187,30 @@ jobs:
           username: ${{ secrets.DURGA }}
           password: ${{ secrets.DURGAPASSWORD }}
 
+
           # --------------------------------------------------
           # EMAIL SENDER
           # --------------------------------------------------
           from: durgapandiyan4@gmail.com
 
+
           # --------------------------------------------------
-          # ASSIGNMENT EMAIL RECIPIENT
+          # DYNAMIC EMAIL RECIPIENT
+          #
+          # Manual execution:
+          #   Client enters email
+          #
+          # Scheduled execution:
+          #   DEFAULT_CLIENT_EMAIL secret is used
           # --------------------------------------------------
-          to: arunbabugreen@gmail.com
+          to: ${{ inputs.client_email || secrets.DEFAULT_CLIENT_EMAIL }}
+
 
           # --------------------------------------------------
           # EMAIL SUBJECT
           # --------------------------------------------------
           subject: "[${{ needs.run-bdd-tests.result }}] SauceDemo BDD Automation | Run #${{ github.run_number }} | ${{ steps.timestamp.outputs.datetime }}"
+
 
           # --------------------------------------------------
           # EMAIL CONTENT
@@ -207,13 +228,16 @@ jobs:
               line-height: 1.5;
             ">
 
+
               <h2>
                 SauceDemo BDD Automation Execution Report
               </h2>
 
+
               <p>
                 Dear Client,
               </p>
+
 
               <p>
                 The SauceDemo WebdriverIO + Cucumber BDD automation
@@ -221,11 +245,13 @@ jobs:
               </p>
 
 
+
               <!-- ==========================================
                    EXECUTION SUMMARY
                    ========================================== -->
 
               <h3>Execution Summary</h3>
+
 
               <table
                 cellpadding="8"
@@ -237,42 +263,57 @@ jobs:
                   max-width: 700px;
                 ">
 
+
                 <tr>
                   <td><b>Test Status</b></td>
                   <td>${{ needs.run-bdd-tests.result }}</td>
                 </tr>
+
 
                 <tr>
                   <td><b>Repository</b></td>
                   <td>${{ github.repository }}</td>
                 </tr>
 
+
                 <tr>
                   <td><b>Branch</b></td>
                   <td>${{ github.ref_name }}</td>
                 </tr>
+
 
                 <tr>
                   <td><b>Workflow</b></td>
                   <td>${{ github.workflow }}</td>
                 </tr>
 
+
                 <tr>
                   <td><b>Run Number</b></td>
                   <td>#${{ github.run_number }}</td>
                 </tr>
+
 
                 <tr>
                   <td><b>Execution Date & Time</b></td>
                   <td>${{ steps.timestamp.outputs.datetime }}</td>
                 </tr>
 
+
                 <tr>
                   <td><b>Triggered By</b></td>
                   <td>${{ github.actor }}</td>
                 </tr>
 
+
+                <tr>
+                  <td><b>Report Recipient</b></td>
+                  <td>${{ inputs.client_email || secrets.DEFAULT_CLIENT_EMAIL }}</td>
+                </tr>
+
+
               </table>
+
 
 
               <!-- ==========================================
@@ -281,16 +322,19 @@ jobs:
 
               <h3>Allure Test Report</h3>
 
+
               <p>
                 The detailed Allure report has been generated and
                 published to GitHub Pages.
               </p>
+
 
               <p>
                 The report contains detailed BDD execution information,
                 including features, scenarios, steps, status,
                 execution duration and failure details.
               </p>
+
 
               <p>
 
@@ -311,16 +355,19 @@ jobs:
               </p>
 
 
+
               <!-- ==========================================
                    GITHUB ACTIONS RUN
                    ========================================== -->
 
               <h3>Pipeline Execution</h3>
 
+
               <p>
                 For complete CI/CD execution details, workflow logs
                 and individual pipeline steps, please use the link below.
               </p>
+
 
               <p>
 
@@ -341,11 +388,13 @@ jobs:
               </p>
 
 
+
               <!-- ==========================================
                    PIPELINE ACTIVITIES
                    ========================================== -->
 
               <h3>Pipeline Activities</h3>
+
 
               <ul>
 
@@ -380,17 +429,20 @@ jobs:
               </ul>
 
 
+
               <!-- ==========================================
                    EXECUTION NOTES
                    ========================================== -->
 
               <h3>Execution Notes</h3>
 
+
               <p>
                 This email notification was automatically generated
                 by the CI/CD pipeline after completion of the test
                 execution.
               </p>
+
 
               <p>
                 Please click
@@ -401,12 +453,14 @@ jobs:
 
               <hr>
 
+
               <p style="font-size: 12px; color: #777777;">
 
                 This is an automated notification generated by
                 GitHub Actions.
 
               </p>
+
 
             </body>
 
